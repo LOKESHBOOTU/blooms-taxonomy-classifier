@@ -1,7 +1,7 @@
 # Bloom's Taxonomy Classifier
 
 🚀 Live Demo:
-[Click Here to Launch App](https://huggingface.co/spaces/Lokeshlokey/blooms-taxonomy-classifier-final)
+[Click Here to Launch Demo](https://huggingface.co/spaces/Lokeshlokey/blooms-taxonomy-classifier-final)
 
 # 📘 Bloom's Taxonomy Classifier
 
