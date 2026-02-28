@@ -1,0 +1,11 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Model files
+bloom_bert_model/
+
+# OS
+.DS_Store
+Thumbs.db
