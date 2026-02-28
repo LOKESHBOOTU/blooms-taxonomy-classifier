@@ -1,20 +1,15 @@
-# Bloom's Taxonomy Classifier
+<img width="1920" height="1187" alt="image" src="https://github.com/user-attachments/assets/20ea6e22-d7f0-45c0-b600-e4c1b9496041" /># Bloom's Taxonomy Classifier
 
 🚀 Live Demo:
 [Click Here to Launch Demo](https://huggingface.co/spaces/Lokeshlokey/blooms-taxonomy-classifier-final)
 
 # 📘 Bloom's Taxonomy Classifier
 
-This project classifies questions into Bloom's Taxonomy levels using:
+An AI-powered web application that classifies questions into Bloom's Taxonomy levels using:
 
 - DistilBERT (Deep Learning)
 - Traditional ML models (Logistic Regression, SVM, Random Forest, etc.)
 - Gradio Web Interface
-# 📘 Bloom's Taxonomy Question Classifier
-
-An AI-powered web application that classifies questions into Bloom’s Taxonomy cognitive levels using **DistilBERT (Deep Learning)** and multiple **Traditional Machine Learning models**.
-
----
 
 ## 🧠 What is Bloom’s Taxonomy?
 
@@ -28,13 +23,9 @@ It helps educators design exams, assignments, and assessments based on difficult
 
 Bloom’s Revised Taxonomy consists of **six levels**, arranged from lower-order thinking to higher-order thinking:
 
-```mermaid
-graph TD
-    A[Creating] --> B[Evaluating]
-    B --> C[Analyzing]
-    C --> D[Applying]
-    D --> E[Understanding]
-    E --> F[Remembering]
+[Uploading image.png…]()
+
+
 
 ## 🚀 How to Run
 
