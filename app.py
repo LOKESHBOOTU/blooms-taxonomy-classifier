@@ -1,57 +1,82 @@
-import os
 import pickle
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import tensorflow as tf
 import gradio as gr
+import tensorflow as tf
 from transformers import DistilBertTokenizerFast, TFDistilBertForSequenceClassification
 from scipy.special import softmax
-
-MODEL_DIR = "bloom_bert_model"
+from huggingface_hub import hf_hub_download
 
 # -------------------------------
-# Load Saved Models
+# CONFIG
 # -------------------------------
 
-tokenizer = DistilBertTokenizerFast.from_pretrained(MODEL_DIR)
-bert_model = TFDistilBertForSequenceClassification.from_pretrained(MODEL_DIR)
+MODEL_NAME = "Lokeshlokey/blooms-taxonomy-distilbert"
 
-with open(os.path.join(MODEL_DIR, "label_encoder.pkl"), "rb") as f:
+# -------------------------------
+# Load Model & Artifacts
+# -------------------------------
+
+print("🔄 Loading tokenizer...")
+tokenizer = DistilBertTokenizerFast.from_pretrained(MODEL_NAME)
+
+print("🔄 Loading DistilBERT model...")
+bert_model = TFDistilBertForSequenceClassification.from_pretrained(MODEL_NAME)
+
+print("🔄 Downloading classical ML artifacts...")
+label_path = hf_hub_download(repo_id=MODEL_NAME, filename="label_encoder.pkl")
+vectorizer_path = hf_hub_download(repo_id=MODEL_NAME, filename="tfidf_vectorizer.pkl")
+ml_models_path = hf_hub_download(repo_id=MODEL_NAME, filename="ml_models.pkl")
+
+with open(label_path, "rb") as f:
     label_encoder = pickle.load(f)
 
-with open(os.path.join(MODEL_DIR, "tfidf_vectorizer.pkl"), "rb") as f:
+with open(vectorizer_path, "rb") as f:
     vectorizer = pickle.load(f)
 
-with open(os.path.join(MODEL_DIR, "ml_models.pkl"), "rb") as f:
+with open(ml_models_path, "rb") as f:
     ml_models = pickle.load(f)
+
+print("✅ All models loaded successfully!")
 
 # -------------------------------
 # Prediction Logic
 # -------------------------------
 
 def predict_all_models(question, true_label=None):
+
+    if not question or not question.strip():
+        return "⚠ Please enter a valid question.", pd.DataFrame(), None
+
     preds = {}
     comparison = {}
 
-    # ---------------- BERT ----------------
-    inputs = tokenizer(question, return_tensors="tf", truncation=True, padding=True)
-    logits = bert_model(inputs).logits.numpy()
+    # -------- DistilBERT --------
+    inputs = tokenizer(
+        question,
+        return_tensors="tf",
+        truncation=True,
+        padding=True,
+        max_length=128
+    )
+
+    logits = bert_model(**inputs).logits.numpy()
     probs = softmax(logits, axis=1)
+
     pred_id = np.argmax(probs)
     bert_label = label_encoder.inverse_transform([pred_id])[0]
     bert_conf = float(np.max(probs))
 
     preds["DistilBERT"] = {
         "label": bert_label,
-        "confidence": bert_conf,
-        "metrics": {"accuracy": "-", "precision": "-", "recall": "-", "f1": "-"}
+        "confidence": bert_conf
     }
 
-    if true_label and true_label.strip() != "":
+    if true_label:
         comparison["DistilBERT"] = 1 if bert_label == true_label else 0
 
-    # ---------------- Classical Models ----------------
+    # -------- Classical ML Models --------
     question_tfidf = vectorizer.transform([question])
 
     for name, model in ml_models.items():
@@ -62,90 +87,73 @@ def predict_all_models(question, true_label=None):
 
         preds[name] = {
             "label": label,
-            "confidence": confidence,
-            "metrics": {"accuracy": "-", "precision": "-", "recall": "-", "f1": "-"}
+            "confidence": confidence
         }
 
-        if true_label and true_label.strip() != "":
+        if true_label:
             comparison[name] = 1 if label == true_label else 0
 
-    return preds, comparison
+    # -------- Summary --------
+    summary = (
+        f"Predicted Bloom's Level (DistilBERT): {bert_label}\n"
+        f"Confidence: {bert_conf:.4f}"
+    )
 
-# -------------------------------
-# Confidence Bar Chart
-# -------------------------------
+    if true_label:
+        summary += f"\nTrue Bloom's Level: {true_label}"
 
-def plot_confidence_bar(preds):
+    # -------- Table --------
+    rows = []
+    for model_name, info in preds.items():
+        row = {
+            "Model": model_name,
+            "Label": info["label"],
+            "Confidence": f"{info['confidence']:.4f}"
+        }
+
+        if true_label:
+            row["Correct?"] = "✅" if comparison.get(model_name) == 1 else "❌"
+
+        rows.append(row)
+
+    df = pd.DataFrame(rows)
+
+    # -------- Confidence Chart --------
+    fig, ax = plt.subplots(figsize=(8, 5))
     models = list(preds.keys())
-    confidences = [info['confidence'] for info in preds.values()]
+    confidences = [info["confidence"] for info in preds.values()]
 
-    fig, ax = plt.subplots(figsize=(8,6))
     bars = ax.bar(models, confidences)
 
     for bar, conf in zip(bars, confidences):
-        ax.text(bar.get_x() + bar.get_width()/2,
-                bar.get_height() + 0.01,
-                f"{conf:.4f}",
-                ha="center", va="bottom")
+        ax.text(
+            bar.get_x() + bar.get_width()/2,
+            bar.get_height() + 0.01,
+            f"{conf:.4f}",
+            ha="center"
+        )
 
     ax.set_ylim(0, 1.1)
     ax.set_ylabel("Confidence")
     ax.set_title("Confidence Comparison")
     plt.xticks(rotation=30)
 
-    return fig
+    return summary, df, fig
 
 # -------------------------------
-# Gradio Interface
+# Gradio UI
 # -------------------------------
 
-label_choices = [""] + list(label_encoder.classes_)
-
-def gradio_interface(question, true_label_choice):
-    preds, comparison = predict_all_models(question, true_label_choice)
-
-    bert_info = preds["DistilBERT"]
-
-    summary = (
-        f"Predicted Bloom's Level (DistilBERT): {bert_info['label']}\n"
-        f"Confidence: {bert_info['confidence']:.4f}"
-    )
-
-    if true_label_choice and true_label_choice.strip() != "":
-        summary += f"\nTrue Bloom's Level: {true_label_choice}"
-
-    # -------- Model Prediction Table --------
-    pred_rows = []
-    for model_name, info in preds.items():
-        row = {
-            "Model": model_name,
-            "Label": info['label'],
-            "Confidence": f"{info['confidence']:.4f}"
-        }
-
-        if true_label_choice and true_label_choice.strip() != "":
-            row["Correct?"] = "✅" if comparison.get(model_name) == 1 else "❌"
-
-        pred_rows.append(row)
-
-    df_preds = pd.DataFrame(pred_rows)
-
-    fig_conf = plot_confidence_bar(preds)
-
-    return summary, df_preds, fig_conf
-
-# -------------------------------
-# Launch App
-# -------------------------------
+label_choices = list(label_encoder.classes_)
 
 interface = gr.Interface(
-    fn=gradio_interface,
+    fn=predict_all_models,
     inputs=[
         gr.Textbox(label="Enter a Question", lines=3),
         gr.Dropdown(
             label="(Optional) True Bloom's Level",
             choices=label_choices,
-            value=""
+            value=None
         )
     ],
     outputs=[
@@ -154,8 +162,8 @@ interface = gr.Interface(
         gr.Plot(label="Confidence Comparison Chart")
     ],
     title="📘 Bloom's Taxonomy Classifier",
-    description="Enter a question to classify its Bloom's level."
+    description="Deep Learning + Traditional ML comparison using trained Bloom's Taxonomy model."
 )
 
 if __name__ == "__main__":
-    interface.launch()
+    interface.launch(server_name="0.0.0.0", server_port=7860)
