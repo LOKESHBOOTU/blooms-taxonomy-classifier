@@ -1,4 +1,4 @@
-<img width="1920" height="1187" alt="image" src="https://github.com/user-attachments/assets/20ea6e22-d7f0-45c0-b600-e4c1b9496041" /># Bloom's Taxonomy Classifier
+# Bloom's Taxonomy Classifier
 
 🚀 Live Demo:
 [Click Here to Launch Demo](https://huggingface.co/spaces/Lokeshlokey/blooms-taxonomy-classifier-final)
@@ -23,8 +23,8 @@ It helps educators design exams, assignments, and assessments based on difficult
 
 Bloom’s Revised Taxonomy consists of **six levels**, arranged from lower-order thinking to higher-order thinking:
 
-[Uploading image.png…]()
 
+<img width="1920" height="1187" alt="image" src="https://github.com/user-attachments/assets/20ea6e22-d7f0-45c0-b600-e4c1b9496041" />
 
 
 ## 🚀 How to Run
