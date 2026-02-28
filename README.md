@@ -10,6 +10,31 @@ This project classifies questions into Bloom's Taxonomy levels using:
 - DistilBERT (Deep Learning)
 - Traditional ML models (Logistic Regression, SVM, Random Forest, etc.)
 - Gradio Web Interface
+# 📘 Bloom's Taxonomy Question Classifier
+
+An AI-powered web application that classifies questions into Bloom’s Taxonomy cognitive levels using **DistilBERT (Deep Learning)** and multiple **Traditional Machine Learning models**.
+
+---
+
+## 🧠 What is Bloom’s Taxonomy?
+
+Bloom’s Taxonomy is a framework used to classify educational learning objectives into levels of cognitive complexity.
+
+It helps educators design exams, assignments, and assessments based on difficulty and depth of understanding.
+
+---
+
+## 📊 Bloom’s Taxonomy Hierarchy
+
+Bloom’s Revised Taxonomy consists of **six levels**, arranged from lower-order thinking to higher-order thinking:
+
+```mermaid
+graph TD
+    A[Creating] --> B[Evaluating]
+    B --> C[Analyzing]
+    C --> D[Applying]
+    D --> E[Understanding]
+    E --> F[Remembering]
 
 ## 🚀 How to Run
 
